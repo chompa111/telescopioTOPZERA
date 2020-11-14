@@ -1,4 +1,4 @@
-class Motor {
+//class Motor {
     int pointer = 0;
     int* pins ;
 
