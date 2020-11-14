@@ -1,0 +1,7 @@
+pra pegar as alterções
+
+pra adicionar o que mexeu
+
+git add .
+git commit -m "teste"
+git push
