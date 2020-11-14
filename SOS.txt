@@ -1,5 +1,7 @@
 pra pegar as alterções
 
+git pull
+
 pra adicionar o que mexeu
 
 git add .
