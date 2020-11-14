@@ -75,6 +75,15 @@ class Motor {
 
 #include <stdlib.h>
 #include <math.h>
+#include <WiFi.h>
+#include "time.h"
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_RESET 4
 
 int pinosMotorH[] = {13, 12, 14, 27};
 int pinosMotorV[] = {26, 25, 33, 32};
@@ -84,8 +93,8 @@ int pinosMotorV[] = {26, 25, 33, 32};
 
 #define VEL_MAX 2
 
-Motor motorH(pinosMotor1);
-Motor motorV(pinosMotor2);
+Motor motorH(pinosMotorH);
+Motor motorV(pinosMotorV);
 
 const int buttonAlign = 0;         // pin in cui l'interruttore abilita l'allineamento con una stella
 int buttonState = 0;                // variabile in cui arduino andrà a leggere lo stato logico di buttonAlign
@@ -119,6 +128,7 @@ void setup() {
   display.setCursor(0, 0);
 
   pinMode(buttonAlign, INPUT);
+  pinMode(5, OUTPUT);
   Serial.begin(9600);
   A_target = A_tel = 0;            // coordinata iniziale di Azimut A (in secondi d'arco) per visualizzare il reticolo del telescopio
   h_target = h_tel = 0;            // coordinata iniziale di altezza h (in secondi d'arco) per visualizzare il reticolo del telescopio
@@ -142,6 +152,8 @@ void loop() {
   if(enablegoto == true){
    goto_object();
   }
+  display.display();
+  //display.setCursor(0,0);
 
 }
 
@@ -187,7 +199,8 @@ void communication(){
   if(input[0]==':' && input[1]=='M' && input[2]=='S' && input[3]=='#'){             // con il comando :MS# stellarium chiede se la rotazione è possibile
     Serial.print("0");
     buttonState = digitalRead(buttonAlign);                                         // legge se l'interruttore per l'allineamento iniziale è su ON o OFF
-    if (buttonState == HIGH) {                                                      // se HIGH aggiorna le coordinate, altrimenti proseguià con il GOTO
+    if (buttonState == HIGH) {
+      digitalWrite(5,HIGH);                                                   // se HIGH aggiorna le coordinate, altrimenti proseguià con il GOTO
       ARtel = ARtarget;
       DECtel = DECtarget;
     }
@@ -228,9 +241,8 @@ void transmitDEC(){                                                             
 void getAR(){                                                                   // riceve la coordinata AR del target nel formato :Sr HH:MM:SS#
      // lcd.setCursor(0,0);
      // lcd.print(input);
-
-     display.setCursor(0,0);
-     display.print(input);
+     //display.setCursor(0,0);
+     display.println(input);
 
      Serial.print("1");
      ARtarget = (atol(input+3))*3600 + (atol(input+6))*60 + atol(input+9);     // converte in secondi la coordinata AR del target
@@ -243,6 +255,8 @@ void getAR(){                                                                   
 void getDEC(){                                                                  // riceve la coordinata AR del target nel formato :Sd +DDßMM:SS#
     // lcd.setCursor(0,1);
     // lcd.print(input);
+    //display.setCursor(0,1);
+    display.println(input);
 
     Serial.print("1");
     DECtarget = (atol(input+4))*3600 + (atol(input+7))*60 + atol(input+10);     // converte in secondi la coordinata DEC del target
