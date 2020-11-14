@@ -1,4 +1,4 @@
-//class Motor {
+//class Motor { //teste de alteracao...
     int pointer = 0;
     int* pins ;
 
