@@ -106,10 +106,17 @@ float delta_target, H_targetRAD, h_targetRAD, A_targetRAD;
 float numerator1, denominator1, numerator2, denominator2;
 
 
-
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 
 void setup() {
+
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.clearDisplay();
+  // text display tests
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
 
   pinMode(buttonAlign, INPUT);
   Serial.begin(9600);
@@ -221,6 +228,9 @@ void transmitDEC(){                                                             
 void getAR(){                                                                   // riceve la coordinata AR del target nel formato :Sr HH:MM:SS#
      // lcd.setCursor(0,0);
      // lcd.print(input);
+
+     display.setCursor(0,0);
+     display.print(input);
 
      Serial.print("1");
      ARtarget = (atol(input+3))*3600 + (atol(input+6))*60 + atol(input+9);     // converte in secondi la coordinata AR del target
