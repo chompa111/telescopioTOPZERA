@@ -96,7 +96,7 @@ int pinosMotorV[] = {26, 25, 33, 32};
 Motor motorH(pinosMotorH);
 Motor motorV(pinosMotorV);
 
-const int buttonAlign = 0;         // pin in cui l'interruttore abilita l'allineamento con una stella
+const int buttonAlign = 19;         // pin in cui l'interruttore abilita l'allineamento con una stella
 int buttonState = 0;                // variabile in cui arduino andrà a leggere lo stato logico di buttonAlign
 char input[20];                     // array di char in cui verranno memorizzati i dati in ingresso
 char txAR[10];                      // array di char in cui verranno memorizzati i dati in uscita
@@ -203,6 +203,9 @@ void communication(){
       digitalWrite(5,HIGH);                                                   // se HIGH aggiorna le coordinate, altrimenti proseguià con il GOTO
       ARtel = ARtarget;
       DECtel = DECtarget;
+    }
+    else{
+      digitalWrite(5,LOW);
     }
     enablegoto = true;                                                              // abilita il goto
   }
