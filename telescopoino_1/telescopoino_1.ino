@@ -132,7 +132,7 @@ void setup() {
   Serial.begin(9600);
   A_target = A_tel = 0;            // coordinata iniziale di Azimut A (in secondi d'arco) per visualizzare il reticolo del telescopio
   h_target = h_tel = 0;            // coordinata iniziale di altezza h (in secondi d'arco) per visualizzare il reticolo del telescopio
-  latitude = 83632;                    // latitudine del luogo di osservazione espressa in secondi d'arco
+  latitude = -83632;                    // latitudine del luogo di osservazione espressa in secondi d'arco
   phi = (float(latitude) / 3600.0) * pigreco / 180.0; // latitudine in radianti
   cos_phi = cos(phi);
   sin_phi = sin(phi);
@@ -148,10 +148,18 @@ void loop() {
   display.println(ARtel);
   display.print("DECtel:");
   display.println(DECtel);
+  display.print("A_tel:");
+  display.println(A_tel);
+  display.print("h_tel:");
+  display.println(h_tel);
   display.print("ARtarget:");
   display.println(ARtarget);
   display.print("DECtarget:");
   display.println(DECtarget);
+  display.print("A_target:");
+  display.println(A_target);
+  display.print("h_target:");
+  display.println(h_target);
   buttonState = digitalRead(19);
   digitalWrite(5,buttonState);
   if (Serial.available() > 0) {
@@ -214,8 +222,8 @@ void communication() {
                        
     if (buttonState == HIGH) {
       digitalWrite(5, HIGH);                                                  // se HIGH aggiorna le coordinate, altrimenti proseguià con il GOTO
-      ARtel = ARtarget;
-      DECtel = DECtarget;
+      A_tel = A_target;
+      h_tel = h_target;
       enablegoto = false;
     }
     else {
