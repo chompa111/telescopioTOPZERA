@@ -378,7 +378,7 @@ void convert_AZ_EQ() {
 
 void goto_object() {
 
-  if(A_diff>32){
+  if(abs(A_diff)>32){
     if ((A_diff > 0 && A_diff <= 648000) || (A_diff <= (-648000))) {      //confronta le coordinate di AR e sceglie la via più breve per raggiungere il target
       increment_A_tel();
     }
@@ -388,7 +388,7 @@ void goto_object() {
     }
   }
 
-  if(h_diff>32){
+  if(abs(h_diff)>32){
 
       if (h_target > h_tel) {                                               //confronta le coordinate di DEC e sceglie la via più breve per raggiungere il target
         go_up();
@@ -408,8 +408,8 @@ void increment_A_tel() {
   A_tel += 32;
   // control.SetDirection(StepperControl::Forward);
   // control.Step(1);
-  motorV.backward();
-  delay(2);
+  motorH.backward();
+  //delay(2);
   // in questo Sketch l'incremento è semplicemente aritmetico, in realtà deve provenire
   if (A_tel >= 1296000) {                 // da una lettura dei dati dell'encoder, oppure per le montature sprovviste, dal
     A_tel = A_tel - 1296000;              // numero dei passi del motore (meno preciso perché non tiene conto del backlash
@@ -424,8 +424,8 @@ void decrement_A_tel() {
   A_tel -= 32;
   // control.SetDirection(StepperControl::Backward);
   // control.Step(1);  // in questo Sketch il decremento è semplicemente aritmetico, in realtà deve provenire
-  motorV.forward();
-  delay(2);
+  motorH.forward();
+  //delay(2);
   if (A_tel < 0) {                        // da una lettura dei dati dell'encoder, oppure per le montature sprovviste, dal
     A_tel = A_tel + 1296000;              // numero dei passi del motore (meno preciso perché non tiene conto del backlash
   }                                       // dell'eventuale motoriduttore o degli step persi.
@@ -440,8 +440,8 @@ void go_up() {                            // in questo Sketch l'incremento è se
   // inviare comando al motore DEC        // numero dei passi del motore (meno preciso perché non tiene conto del backlash
   // dell'eventuale motoriduttore o degli step persi.
 
-  motorH.forward();
-  delay(2);
+  motorV.forward();
+  //delay(2);
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -450,8 +450,8 @@ void go_down() {                          // in questo Sketch il decremento è s
   h_tel -= 32;                              // da una lettura dei dati dell'encoder, oppure per le montature sprovviste, dal
   // inviare comando al motore DEC        // numero dei passi del motore (meno preciso perché non tiene conto del backlash
   // dell'eventuale motoriduttore o degli step persi.
-  motorH.backward();
-  delay(2);
+  motorV.backward();
+  //delay(2);
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
