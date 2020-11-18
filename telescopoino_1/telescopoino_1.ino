@@ -171,10 +171,10 @@ void loop() {
   if (enablegoto == true) {
     goto_object();
   }
-  
-  
+
+
   display.display();
-  
+
 
 }
 
@@ -219,7 +219,7 @@ void communication() {
 
   if (input[0] == ':' && input[1] == 'M' && input[2] == 'S' && input[3] == '#') {   // con il comando :MS# stellarium chiede se la rotazione è possibile
     Serial.print("0");
-                       
+
     if (buttonState == HIGH) {
       digitalWrite(5, HIGH);                                                  // se HIGH aggiorna le coordinate, altrimenti proseguià con il GOTO
       A_tel = A_target;
@@ -228,7 +228,7 @@ void communication() {
     }
     else {
       digitalWrite(5, LOW);
-      enablegoto = true; 
+      enablegoto = true;
     }
                                                                  // abilita il goto
   }
@@ -378,22 +378,25 @@ void convert_AZ_EQ() {
 
 void goto_object() {
 
-  if ((A_diff > 0 && A_diff <= 648000) || (A_diff <= (-648000))) {      //confronta le coordinate di AR e sceglie la via più breve per raggiungere il target
-    increment_A_tel();
+  if(A_diff>32){
+    if ((A_diff > 0 && A_diff <= 648000) || (A_diff <= (-648000))) {      //confronta le coordinate di AR e sceglie la via più breve per raggiungere il target
+      increment_A_tel();
+    }
+
+    if ((A_diff > 648000) ||  (A_diff < 0 && A_diff > (-648000))) {
+      decrement_A_tel();
+    }
   }
 
-  if ((A_diff > 648000) ||  (A_diff < 0 && A_diff > (-648000))) {
-    decrement_A_tel();
-  }
+  if(h_diff>32){
 
+      if (h_target > h_tel) {                                               //confronta le coordinate di DEC e sceglie la via più breve per raggiungere il target
+        go_up();
+      }
 
-
-  if (h_target > h_tel) {                                               //confronta le coordinate di DEC e sceglie la via più breve per raggiungere il target
-    go_up();
-  }
-
-  if (h_target < h_tel) {
-    go_down();
+      if (h_target < h_tel) {
+        go_down();
+      }
   }
 
 }
@@ -447,7 +450,7 @@ void go_down() {                          // in questo Sketch il decremento è s
   h_tel -= 32;                              // da una lettura dei dati dell'encoder, oppure per le montature sprovviste, dal
   // inviare comando al motore DEC        // numero dei passi del motore (meno preciso perché non tiene conto del backlash
   // dell'eventuale motoriduttore o degli step persi.
-  motorV.backward();
+  motorH.backward();
   delay(2);
 }
 
