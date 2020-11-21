@@ -18,7 +18,7 @@ class Motor {
     }
 
     void setState(String input) {
-      Serial.println("setState");
+      // Serial.println("setState");
       if (input.charAt(0) == '1') {
         digitalWrite(pins[0], 1);
       } else {
@@ -119,6 +119,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 
 void setup() {
+  xTaskCreatePinnedToCore(loop2, "loop2", 8192, NULL, 1, NULL, 0);
 
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
@@ -140,42 +141,101 @@ void setup() {
   TSL = 0;                              // in questo Sketch non c'è l'orologio siderale, pertanto TSL è fissato a zero e deve essere espresso in secondi
 }
 
+//vars do loop2
+
+#define VEL_MIN 200
+#define VEL_MAX 2
+long count2 = 0;
+int tempoH = 0;
+int tempoV = 0;
+int tempoD = 0;
+
+void loop2(void* p) {
+  bool b = false;
+
+  while (1) {
+    if (enablegoto == true) {
+      goto_object();
+    }
+    count2++;
+    delay(2);
+
+    int leituraV = analogRead(A6) - 1967;
+    int leituraH = analogRead(A7) - 1900;
+
+    long currentMilis = millis();
+    int intervalV = map(abs(leituraV), 0, 1900, VEL_MIN, VEL_MAX);
+    intervalV = intervalV < 0 ? 2 : intervalV;
+
+    int intervalH = map(abs(leituraH), 0, 1900, VEL_MIN, VEL_MAX);
+    intervalH = intervalH < 0 ? 2 : intervalH;
+
+
+    if (abs(leituraV) > 100) {
+      if ((currentMilis - tempoV) > intervalV) {
+        if (leituraV < 0) {
+          //backward(sequence, &pointer, pinosMotor1);
+          motorH.backward();
+        } else {
+          motorH.forward();
+        }
+        tempoV = currentMilis;
+      }
+    }
+
+    if (abs(leituraH) > 100) {
+      if ((currentMilis - tempoH) > intervalH) {
+        if (leituraH < 0) {
+          motorV.forward();
+        } else {
+          motorV.backward();
+        }
+        tempoH = currentMilis;
+      }
+    }
+  }
+
+
+}
+
+long count = 0;
 
 void loop() {
-  display.setCursor(0,0);
+  display.setCursor(0, 0);
   display.clearDisplay();
   display.print("ARtel:");
   display.println(ARtel);
   display.print("DECtel:");
   display.println(DECtel);
+  display.print("GOTO:");
+  display.println(enablegoto);
   display.print("A_tel:");
   display.println(A_tel);
   display.print("h_tel:");
   display.println(h_tel);
-  display.print("ARtarget:");
-  display.println(ARtarget);
-  display.print("DECtarget:");
-  display.println(DECtarget);
   display.print("A_target:");
   display.println(A_target);
   display.print("h_target:");
   display.println(h_target);
+  display.print("c1:");
+  display.print(count);
+  display.print("|c2:");
+  display.print(count2);
+  count++;
   buttonState = digitalRead(19);
-  digitalWrite(5,buttonState);
+  digitalWrite(5, buttonState);
   if (Serial.available() > 0) {
     communication();
   }
 
   A_diff = A_target - A_tel;
   h_diff = h_target - h_tel;
-  if (enablegoto == true) {
-    goto_object();
-  }
+
 
 
   display.display();
 
-
+  //delay(200);
 }
 
 
@@ -230,7 +290,7 @@ void communication() {
       digitalWrite(5, LOW);
       enablegoto = true;
     }
-                                                                 // abilita il goto
+    // abilita il goto
   }
 }
 
@@ -378,7 +438,7 @@ void convert_AZ_EQ() {
 
 void goto_object() {
 
-  if(A_diff>32){
+  if (abs(A_diff) > 32) {
     if ((A_diff > 0 && A_diff <= 648000) || (A_diff <= (-648000))) {      //confronta le coordinate di AR e sceglie la via più breve per raggiungere il target
       increment_A_tel();
     }
@@ -388,15 +448,15 @@ void goto_object() {
     }
   }
 
-  if(h_diff>32){
+  if (abs(h_diff) > 32) {
 
-      if (h_target > h_tel) {                                               //confronta le coordinate di DEC e sceglie la via più breve per raggiungere il target
-        go_up();
-      }
+    if (h_target > h_tel) {                                               //confronta le coordinate di DEC e sceglie la via più breve per raggiungere il target
+      go_up();
+    }
 
-      if (h_target < h_tel) {
-        go_down();
-      }
+    if (h_target < h_tel) {
+      go_down();
+    }
   }
 
 }
@@ -408,8 +468,8 @@ void increment_A_tel() {
   A_tel += 32;
   // control.SetDirection(StepperControl::Forward);
   // control.Step(1);
-  motorV.backward();
-  delay(2);
+  //delay(2);
+  motorH.forward();
   // in questo Sketch l'incremento è semplicemente aritmetico, in realtà deve provenire
   if (A_tel >= 1296000) {                 // da una lettura dei dati dell'encoder, oppure per le montature sprovviste, dal
     A_tel = A_tel - 1296000;              // numero dei passi del motore (meno preciso perché non tiene conto del backlash
@@ -424,8 +484,8 @@ void decrement_A_tel() {
   A_tel -= 32;
   // control.SetDirection(StepperControl::Backward);
   // control.Step(1);  // in questo Sketch il decremento è semplicemente aritmetico, in realtà deve provenire
-  motorV.forward();
-  delay(2);
+  motorH.backward();
+  //delay(2);
   if (A_tel < 0) {                        // da una lettura dei dati dell'encoder, oppure per le montature sprovviste, dal
     A_tel = A_tel + 1296000;              // numero dei passi del motore (meno preciso perché non tiene conto del backlash
   }                                       // dell'eventuale motoriduttore o degli step persi.
@@ -440,8 +500,8 @@ void go_up() {                            // in questo Sketch l'incremento è se
   // inviare comando al motore DEC        // numero dei passi del motore (meno preciso perché non tiene conto del backlash
   // dell'eventuale motoriduttore o degli step persi.
 
-  motorH.forward();
-  delay(2);
+  motorV.backward();
+  //delay(2);
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -450,8 +510,8 @@ void go_down() {                          // in questo Sketch il decremento è s
   h_tel -= 32;                              // da una lettura dei dati dell'encoder, oppure per le montature sprovviste, dal
   // inviare comando al motore DEC        // numero dei passi del motore (meno preciso perché non tiene conto del backlash
   // dell'eventuale motoriduttore o degli step persi.
-  motorH.backward();
-  delay(2);
+  motorV.forward();
+  //delay(2);
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
