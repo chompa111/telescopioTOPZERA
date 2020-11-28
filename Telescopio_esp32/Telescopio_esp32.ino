@@ -10,34 +10,18 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-#define dc 0.0657098244
-#define tc 1.00273791
-#define gc 6.648605
-#define g2000 6.5988098
-#define lc 0.0497958000000001
-#define nc -0.0159140999999998
-#define fudge -0.013922               // fudge factor (unnecessary?
-#define LONGITUDE -2.247926           // Longitude for Manchester UK            
-#define LATITUDE  53.53               // Latitude for Manchester UK
-#define siderealday 23.9344699        // length of sidereal day (23:56:04)
-double GST,LST,utc;                   // greenwich & local apparent sidereal time
-int dh,dm,ds;                         // local sidereal time
-int sh,sm,ss;                         // solar time
-
-// equation of time
-double tv,tv1,tv2,tv3;                // total time variation (mins)
-int tvm,tvs,nd;               
-
-#define sp Serial.print   
-#define spln Serial.println
-
 const char* ssid     = "FREUD";//rede wifi
 const char* password = "pensa428";//senha wifi
 
 const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = -10800;
+const long  gmtOffset_sec = 0;//-10800;
 const int   daylightOffset_sec = 0;
 long hora,minuto,segundo,dia,mes,ano;
+long TSL=0;
+double Longitude = -46.5811;
+int lstSec = 0;
+int lstMin = 0;
+int lstHour = 0;
 
 
 void setup() {
@@ -121,6 +105,15 @@ void printLocalTime() {
   display.print(minuto);
   display.print(":");
   display.println(segundo);
+  Sideral();
+  display.print("TSL=");
+  display.println(TSL);
+  display.print("sideral=");
+  display.print(lstHour);
+  display.print(":");
+  display.print(lstMin);
+  display.print(":");
+  display.println(lstSec);
   display.display();
   
 }
