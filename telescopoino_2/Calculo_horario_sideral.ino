@@ -7,7 +7,7 @@ void Relogio() {
   }
   //display.clearDisplay();
   //display.setCursor(0, 0);
-  Serial.println("Time variables");
+  //Serial.println("Time variables");
   char converteano[5];
   strftime(converteano, 5, "%Y", &timeinfo);
   ano = atol(converteano);

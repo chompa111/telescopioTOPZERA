@@ -96,13 +96,13 @@ int pinosMotorV[] = {26, 25, 33, 32};
 Motor motorH(pinosMotorH);
 Motor motorV(pinosMotorV);
 
-const char* ssid     = "FREUD";//rede wifi
-const char* password = "pensa428";//senha wifi
+const char* ssid     = "LH";//rede wifi
+const char* password = "martoca03";//senha wifi
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 0;//-10800;
 const int   daylightOffset_sec = 0;
-long hora,minuto,segundo,dia,mes,ano;
+long hora, minuto, segundo, dia, mes, ano;
 double Longitude = -46.5811;
 int lstSec = 0;
 int lstMin = 0;
@@ -139,7 +139,7 @@ void setup() {
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0, 0);
-//conecta no wifi*****************************************************************
+  //conecta no wifi*****************************************************************
   pinMode(19, INPUT);
   pinMode(5, OUTPUT);
   Serial.begin(9600);
@@ -167,7 +167,7 @@ void setup() {
   display.display();
   // Init and get the time
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  //Relogio();
+  Relogio();
 
   //disconnect WiFi as it's no longer needed
   WiFi.disconnect(true);
@@ -180,7 +180,7 @@ void setup() {
   cos_phi = cos(phi);
   sin_phi = sin(phi);
   enablegoto = false;
-  TSL = 0;                              // in questo Sketch non c'è l'orologio siderale, pertanto TSL è fissato a zero e deve essere espresso in secondi
+  //TSL = 0;                              // in questo Sketch non c'è l'orologio siderale, pertanto TSL è fissato a zero e deve essere espresso in secondi
 }
 
 //vars do loop2
@@ -213,7 +213,7 @@ void loop2(void* p) {
     intervalH = intervalH < 0 ? 2 : intervalH;
 
 
-    if (abs(leituraV) > 100) {
+    if (abs(leituraV) > 300) {
       if ((currentMilis - tempoV) > intervalV) {
         if (leituraV < 0) {
           //backward(sequence, &pointer, pinosMotor1);
@@ -225,7 +225,7 @@ void loop2(void* p) {
       }
     }
 
-    if (abs(leituraH) > 100) {
+    if (abs(leituraH) > 300) {
       if ((currentMilis - tempoH) > intervalH) {
         if (leituraH < 0) {
           motorV.forward();
@@ -243,7 +243,8 @@ void loop2(void* p) {
 long count = 0;
 
 void loop() {
-  //Relogio();
+  Relogio();
+  convert_EQ_AZ();
   display.setCursor(0, 0);
   display.clearDisplay();
   display.print("ARtel:");
@@ -275,8 +276,6 @@ void loop() {
     communication();
   }
 
-  A_diff = A_target - A_tel;
-  h_diff = h_target - h_tel;
 
 
 
@@ -484,6 +483,10 @@ void convert_AZ_EQ() {
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void goto_object() {
+
+  A_diff = A_target - A_tel;
+  h_diff = h_target - h_tel;
+
 
   if (abs(A_diff) > 32) {
     if ((A_diff > 0 && A_diff <= 648000) || (A_diff <= (-648000))) {      //confronta le coordinate di AR e sceglie la via più breve per raggiungere il target
