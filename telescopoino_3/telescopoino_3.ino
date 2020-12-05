@@ -76,6 +76,7 @@ class Motor {
 #include <stdlib.h>
 #include <math.h>
 #include <WiFi.h>
+#include "BluetoothSerial.h"
 #include "time.h"
 #include <SPI.h>
 #include <Wire.h>
@@ -88,6 +89,11 @@ class Motor {
 int pinosMotorH[] = {13, 12, 14, 27};
 int pinosMotorV[] = {26, 25, 33, 32};
 
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
+
+BluetoothSerial SerialBT;
 
 #define VEL_MIN 200
 
@@ -132,7 +138,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 void setup() {
   xTaskCreatePinnedToCore(loop2, "loop2", 8192, NULL, 1, NULL, 0);
-
+  SerialBT.begin("HubleIno"); //Bluetooth device name
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
   // text display tests
@@ -145,21 +151,21 @@ void setup() {
   Serial.begin(9600);
   display.println("Conectando ao WiFi...");
   // Connect to Wi-Fi
-  Serial.print("Connecting to ");
+  //Serial.print("Connecting to ");
   display.print("Rede = ");
-  Serial.println(ssid);
+  //Serial.println(ssid);
   display.print(ssid);
   WiFi.begin(ssid, password);
   display.display();
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
+    //Serial.print(".");
     display.print(">");
     display.display();
   }
-  Serial.println("");
+  //Serial.println("");
   display.println("");
-  Serial.println("WiFi connected.");
+  //Serial.println("WiFi connected.");
   display.println("CONECTADO");
   display.display();
   delay(2000);
@@ -272,7 +278,7 @@ void loop() {
   count++;
   buttonState = digitalRead(19);
   digitalWrite(5, buttonState);
-  if (Serial.available() > 0) {
+  if ((Serial.available() > 0) || (SerialBT.available() > 0)) {
     communication();
   }
 
@@ -288,12 +294,22 @@ void loop() {
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void communication() {
-
   int i = 0;
-  input[i++] = Serial.read();
-  delay(5);
-  while ((input[i++] = Serial.read()) != '#') {
+  if (Serial.available() > 0) {
+    //int i = 0;
+    input[i++] = Serial.read();
     delay(5);
+    while ((input[i++] = Serial.read()) != '#') {
+      delay(5);
+    }
+  }
+  if (SerialBT.available() > 0){
+    //int i = 0;
+    input[i++] = SerialBT.read();
+    delay(5);
+    while ((input[i++] = SerialBT.read()) != '#') {
+      delay(5);
+    }
   }
   input[i] = '\0';
 
@@ -325,7 +341,7 @@ void communication() {
 
   if (input[0] == ':' && input[1] == 'M' && input[2] == 'S' && input[3] == '#') {   // con il comando :MS# stellarium chiede se la rotazione è possibile
     Serial.print("0");
-
+    SerialBT.print("0");
     if (buttonState == HIGH) {
       digitalWrite(5, HIGH);                                                  // se HIGH aggiorna le coordinate, altrimenti proseguià con il GOTO
       A_tel = A_target;
@@ -351,7 +367,7 @@ void transmitAR() {                                                             
   arSS = (ARtel - arHH * 3600) - arMM * 60;                                  // ricava i secondi della coordinata AR del telescopio
   sprintf(txAR, "%02d:%02d:%02d#", int(arHH), int(arMM), int(arSS));
   Serial.print(txAR);
-
+  SerialBT.print(txAR);
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -365,7 +381,7 @@ void transmitDEC() {                                                            
   decSS = (abs(DECtel) - decDEG * 3600) - decMM * 60;                        // ricava i secondi della coordinata DEC del telescopio
   sprintf(txDEC, "%c%02d%c%02d:%02d#", SIGNtel, int(decDEG), 223, int(decMM), int(decSS));
   Serial.print(txDEC);
-
+  SerialBT.print(txDEC);
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -377,6 +393,7 @@ void getAR() {                                                                  
   //display.println(input);
 
   Serial.print("1");
+  SerialBT.print("1");
   ARtarget = (atol(input + 3)) * 3600 + (atol(input + 6)) * 60 + atol(input + 9); // converte in secondi la coordinata AR del target
   enablegoto = false;                                                        // mantiene disabilitato il goto fino all'arrivo della coordinata DEC
 }
@@ -391,6 +408,7 @@ void getDEC() {                                                                 
   //display.println(input);
 
   Serial.print("1");
+  SerialBT.print("1");
   DECtarget = (atol(input + 4)) * 3600 + (atol(input + 7)) * 60 + atol(input + 10); // converte in secondi la coordinata DEC del target
   if (input[3] == '-') {                                                      // per una corretta conversione ha prelevato solo la parte numerale
     DECtarget *= (-1);                                                        // (cioè senza il segno) pertanto se la coordinata DEC è negativa, dopo
